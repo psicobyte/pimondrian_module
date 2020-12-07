@@ -30,6 +30,8 @@ The module has a `from_file_generator(file)` function that returns a generator f
 
 There is a file with the first 10000 digits of the number pi in the path defined in the constant `PI_DIGITS_FILE`. For convenience, there is also a `pi_generator()` function that uses that file to return a generator with the digits of Pi.
 
+The module also has a function `random_generator()` that returns a random digits generator.
+
 The `draw()` method of the `Painting()` class returns an image object from Pillow.
 
 ```
@@ -103,7 +105,8 @@ optional arguments      | Usage
  -x X_SIZE, --xsize X_SIZE | painting width. The default value is 1200
  -i ITERATIONS, --iterations ITERATIONS | number of iterations in the creation of the painting. The more iterations, the more rectangles. The default value is 5
  -l LINE, --line LINE  | line thickness. The default value is 4
- 
+ -r, --random  | use random numbers instead of a file
+
 Examples:
 
 Can be executed without arguments:

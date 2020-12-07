@@ -83,6 +83,9 @@ times as indicated with the flag --iterations.
                         help='line thickness. The default value is {}'.format(
                             DEFAULT_LINE_SIZE))
 
+    parser.add_argument('-r', '--random', action='count',
+                        help='use random numbers instead of a file')
+
     args = parser.parse_args()
 
     paint_name = args.name if args.name else DEFAULT_PAINT_NAME
@@ -104,15 +107,18 @@ times as indicated with the flag --iterations.
 
     if not sys.stdin.isatty():
         print("Reading from stdin")
-        file = sys.stdin
+        generator = pm.from_file_generator(sys.stdin)
+    elif args.random and not args.file:
+        generator = pm.random_generator()
+        print("Randomly generated")
     else:
         n_filename = args.file if args.file else DEFAULT_NUMBERS_FILE
         try:
             file = open(n_filename)
         except (FileNotFoundError, PermissionError, IsADirectoryError):
             sys.exit("error opening numbers file")
-
-    generator = pm.from_file_generator(file)
+        generator = pm.from_file_generator(file)
+        print("Extracting digits from file")
 
     if args.gallery:
         for number in range(args.gallery):
