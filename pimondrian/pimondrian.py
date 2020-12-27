@@ -95,14 +95,16 @@ class Painting:
     """
     A painting like those that Mondrian painted
     """
-
-    def __init__(self, iterations, iterator):
+    def __init__(self, iterations, iterable):
         """
         @param iterations: number of iterations
-        @param iterator: numbers iterator
+        @param iterable: numbers iterable
         """
         self._max_gen = iterations
-        self._iterator = iterator
+        try:
+            self._iterator = iter(iterable)
+        except TypeError:
+            sys.exit("error: an iterable must be provided")
 
         # root rectangle
         self._rectangles = [SubRectangle(1, 0, 0)]
