@@ -33,6 +33,18 @@ DEFAULT_COLORS_FILE = pm.COLORS_FILE
 DEFAULT_NUMBERS_FILE = pm.PI_DIGITS_FILE
 
 
+def open_numbers_file(filename):
+    """
+    Open the file with the numbers, or abort with an error message.
+    @param filename: path of the file
+    @return: file object
+    """
+    try:
+        return open(filename)
+    except (FileNotFoundError, PermissionError, IsADirectoryError):
+        sys.exit("error opening numbers file")
+
+
 def main():
     """
     CLI function
@@ -105,19 +117,20 @@ times as indicated with the flag --iterations.
 
     colors = pm.from_file_colors(colors_file)
 
-    if not sys.stdin.isatty():
-        print("Reading from stdin")
-        generator = pm.from_file_generator(sys.stdin)
-    elif args.random and not args.file:
+    # An explicitly requested source always wins over what is piped in, so
+    # that --file and --random keep working when stdin is not a terminal.
+    if args.file:
+        generator = pm.from_file_generator(open_numbers_file(args.file))
+        print("Extracting digits from file")
+    elif args.random:
         generator = pm.random_generator()
         print("Randomly generated")
+    elif not sys.stdin.isatty():
+        print("Reading from stdin")
+        generator = pm.from_file_generator(sys.stdin)
     else:
-        n_filename = args.file if args.file else DEFAULT_NUMBERS_FILE
-        try:
-            file = open(n_filename)
-        except (FileNotFoundError, PermissionError, IsADirectoryError):
-            sys.exit("error opening numbers file")
-        generator = pm.from_file_generator(file)
+        generator = pm.from_file_generator(
+            open_numbers_file(DEFAULT_NUMBERS_FILE))
         print("Extracting digits from file")
 
     if args.gallery:
