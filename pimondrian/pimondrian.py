@@ -124,9 +124,9 @@ class Painting:
         @param gen: Generation
         @return: tuple of rectangles
         """
-        if gen:
-            return (x for x in self._rectangles if x.generation == gen)
-        return (x for x in self._rectangles if x.generation == self._max_gen)
+        if gen is None:
+            gen = self._max_gen
+        return (x for x in self._rectangles if x.generation == gen)
 
     def _divide_rectangle(self, parent):
         """Take the next three digits of the iterator, and divide the
@@ -160,12 +160,25 @@ class Painting:
         line_w = round(line / 2, 0)
 
         for rect in self._get_generation(gen):
-            zero = tuple(
-                z1 * z2 / 100 + line_w for z1, z2 in zip(rect.zero, size))
-            end = tuple(
-                e1 * e2 / 100 - line_w for e1, e2 in zip(rect.end, size))
+            zero = [z1 * z2 / 100 for z1, z2 in zip(rect.zero, size)]
+            end = [e1 * e2 / 100 for e1, e2 in zip(rect.end, size)]
 
-            draw.rectangle([zero, end], outline="#000000",
+            # A cut placed on one of the edges of its parent, or two
+            # coordinates that round to the same value, leave a rectangle
+            # with no area. There is nothing to paint for those.
+            if zero[0] >= end[0] or zero[1] >= end[1]:
+                continue
+
+            # The border is painted by shrinking every rectangle half a line
+            # on each side, so that two neighbours leave a whole line between
+            # them. Narrow rectangles are shrunk less, otherwise they would
+            # end up turned inside out.
+            for axis in (0, 1):
+                margin = min(line_w, (end[axis] - zero[axis]) / 2)
+                zero[axis] += margin
+                end[axis] = max(end[axis] - margin, zero[axis])
+
+            draw.rectangle([tuple(zero), tuple(end)], outline="#000000",
                            fill=colors[rect.color])
         return img
 
@@ -258,7 +271,8 @@ class SubRectangle:
     def _divide(short, long, factor):
         """
         return the point that corresponds to 'factor' tenths between 'short'
-        and 'long'
+        and 'long'. A 'factor' of zero is taken as ten tenths, so the cut
+        falls on the far edge and one of the two children has no area.
         """
 
         if factor:
