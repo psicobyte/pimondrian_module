@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pimondrian"
+version = "1.3.0"
+description = "Draw Paintings as Mondrian"
+readme = "README.md"
+requires-python = ">=3.6"
+license = "AGPL-3.0-or-later"
+license-files = ["LICENSE"]
+authors = [
+    { name = "Allan Psicobyte", email = "psicobyte@gmail.com" },
+]
+keywords = ["mondrian", "art", "painting"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "Topic :: Artistic Software",
+]
+dependencies = ["pillow"]
+
+[project.urls]
+Homepage = "https://github.com/psicobyte/pimondrian_module"
+
+[project.scripts]
+pimondrian = "pimondrian.__main__:main"
+
+[tool.setuptools]
+packages = ["pimondrian"]
+
+[tool.setuptools.package-data]
+pimondrian = ["colors.txt", "10000pi.txt"]
