@@ -20,6 +20,7 @@
 Module that generates paintings in the Mondrian style from a numerical
 sequence.
 """
+import io
 import os
 from random import randint
 import sys
@@ -52,11 +53,14 @@ def pi_generator():
     Return a generator that yield the digits of number Pi.
     @return: generator
     """
+    # The file is small, so it is read at once and closed right away instead
+    # of staying open for as long as the generator lives.
     try:
-        pi_file = open(PI_DIGITS_FILE)
+        with open(PI_DIGITS_FILE) as pi_file:
+            digits = pi_file.read()
     except (FileNotFoundError, PermissionError, IsADirectoryError):
         sys.exit("error opening pi digits file")
-    return from_file_generator(pi_file)
+    return from_file_generator(io.StringIO(digits))
 
 
 def random_generator():
@@ -85,10 +89,10 @@ def default_colors():
     @return: list
     """
     try:
-        color_file = open(COLORS_FILE)
+        with open(COLORS_FILE) as color_file:
+            return from_file_colors(color_file)
     except (FileNotFoundError, PermissionError, IsADirectoryError):
         sys.exit("error opening colors file")
-    return from_file_colors(color_file)
 
 
 class Painting:

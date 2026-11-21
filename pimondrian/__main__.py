@@ -22,6 +22,7 @@ This module is the Pi Mondrian command line
 """
 
 import argparse
+import contextlib
 import sys
 import pimondrian as pm
 
@@ -111,43 +112,45 @@ times as indicated with the flag --iterations.
 
     c_filename = args.colors if args.colors else DEFAULT_COLORS_FILE
     try:
-        colors_file = open(c_filename)
+        with open(c_filename) as colors_file:
+            colors = pm.from_file_colors(colors_file)
     except (FileNotFoundError, PermissionError, IsADirectoryError):
         sys.exit("error opening colors file")
 
-    colors = pm.from_file_colors(colors_file)
+    # Any numbers file opened below is closed when the painting is done.
+    with contextlib.ExitStack() as stack:
+        # An explicitly requested source always wins over what is piped in, so
+        # that --file and --random keep working when stdin is not a terminal.
+        if args.file:
+            generator = pm.from_file_generator(
+                stack.enter_context(open_numbers_file(args.file)))
+            print("Extracting digits from file")
+        elif args.random:
+            generator = pm.random_generator()
+            print("Randomly generated")
+        elif not sys.stdin.isatty():
+            print("Reading from stdin")
+            generator = pm.from_file_generator(sys.stdin)
+        else:
+            generator = pm.from_file_generator(
+                stack.enter_context(open_numbers_file(DEFAULT_NUMBERS_FILE)))
+            print("Extracting digits from file")
 
-    # An explicitly requested source always wins over what is piped in, so
-    # that --file and --random keep working when stdin is not a terminal.
-    if args.file:
-        generator = pm.from_file_generator(open_numbers_file(args.file))
-        print("Extracting digits from file")
-    elif args.random:
-        generator = pm.random_generator()
-        print("Randomly generated")
-    elif not sys.stdin.isatty():
-        print("Reading from stdin")
-        generator = pm.from_file_generator(sys.stdin)
-    else:
-        generator = pm.from_file_generator(
-            open_numbers_file(DEFAULT_NUMBERS_FILE))
-        print("Extracting digits from file")
-
-    if args.gallery:
-        for number in range(args.gallery):
-            print("Artist working... ({})".format(number))
+        if args.gallery:
+            for number in range(args.gallery):
+                print("Artist working... ({})".format(number))
+                pm.Painting(iterations, generator).save_png(line,
+                                                            colors,
+                                                            size,
+                                                            "{}_{}".format(
+                                                                paint_name,
+                                                                number))
+        else:
+            print("Artist working...")
             pm.Painting(iterations, generator).save_png(line,
                                                         colors,
                                                         size,
-                                                        "{}_{}".format(
-                                                            paint_name,
-                                                            number))
-    else:
-        print("Artist working...")
-        pm.Painting(iterations, generator).save_png(line,
-                                                    colors,
-                                                    size,
-                                                    paint_name)
+                                                        paint_name)
 
 
 if __name__ == '__main__':
